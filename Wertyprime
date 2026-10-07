@@ -1,0 +1,346 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+if _G.__BuddyCleanup then pcall(_G.__BuddyCleanup); _G.__BuddyCleanup = nil end
+local oldGui = playerGui:FindFirstChild("BuddyGui"); if oldGui then oldGui:Destroy() end
+local bp0 = player:FindFirstChild("Backpack"); if bp0 then local t = bp0:FindFirstChild("Buddy"); if t then t:Destroy() end end
+local ch0 = player.Character; if ch0 then local t = ch0:FindFirstChild("Buddy"); if t then t:Destroy() end end
+local om = workspace:FindFirstChild("HandBuddy"); if om then om:Destroy() end
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "BuddyGui"
+gui.ResetOnSpawn = false
+local lbl = Instance.new("TextLabel")
+lbl.Size = UDim2.new(0, 300, 0, 34)
+lbl.Position = UDim2.new(0.5, -150, 0, 60)
+lbl.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+lbl.TextColor3 = Color3.new(1, 1, 1)
+lbl.Font = Enum.Font.GothamBold
+lbl.TextSize = 13
+lbl.Text = "Спавню Бадди..."
+local c = Instance.new("UICorner"); c.Parent = lbl
+lbl.Parent = gui
+gui.Parent = playerGui
+
+local model, Tool
+
+local ok, err = pcall(function()
+
+	local BODY = Color3.fromRGB(38, 28, 52)
+	local GLOW = Color3.fromRGB(190, 110, 255)
+	local WING = Color3.fromRGB(150, 85, 205)
+	local PINK = Color3.fromRGB(255, 120, 170)
+	local WHITE = Color3.fromRGB(235, 235, 240)
+
+	local COOLDOWN = 3
+	local DISTANCE = 2.6
+	local HEIGHT = -0.2
+
+	local SKIN = Color3.fromRGB(245, 205, 165)
+	local ch0 = player.Character
+	if ch0 then
+		local h = ch0:FindFirstChild("Head")
+		if h then SKIN = h.Color end
+	end
+
+	model = Instance.new("Model")
+	model.Name = "HandBuddy"
+
+	local root = Instance.new("Part")
+	root.Name = "Root"
+	root.Size = Vector3.new(0.4, 0.4, 0.4)
+	root.Transparency = 1
+	root.Anchored = true
+	root.CanCollide = false
+	root.Parent = model
+	model.PrimaryPart = root
+
+	local parts = {}
+	local function mk(class, size, color, off, neon)
+		local p = Instance.new(class)
+		p.Anchored = true
+		p.CanCollide = false
+		p.Material = neon and Enum.Material.Neon or Enum.Material.SmoothPlastic
+		p.Size = size
+		p.Color = color
+		if p:IsA("Part") then
+			p.TopSurface = Enum.SurfaceType.Smooth
+			p.BottomSurface = Enum.SurfaceType.Smooth
+		end
+		p.Parent = model
+		table.insert(parts, {p = p, off = off})
+		return p
+	end
+
+	local body = mk("Part", Vector3.new(1.3, 1.25, 1.3), BODY, CFrame.new(0, 0, 0), false)
+	local bm = Instance.new("SpecialMesh")
+	bm.MeshType = Enum.MeshType.Sphere
+	bm.Parent = body
+
+	local pl = Instance.new("PointLight")
+	pl.Color = GLOW; pl.Range = 5; pl.Brightness = 0.8; pl.Parent = body
+
+	local function makeEye(x)
+		local e = mk("Part", Vector3.new(0.24, 0.2, 0.14), GLOW, CFrame.new(x, 0.24, -0.54), true)
+		local m = Instance.new("SpecialMesh")
+		m.MeshType = Enum.MeshType.Sphere
+		m.Scale = Vector3.new(1, 0.75, 1)
+		m.Parent = e
+		return m
+	end
+	local eyeMeshL = makeEye(-0.28)
+	local eyeMeshR = makeEye(0.28)
+
+	local mouthPlate = mk("Part", Vector3.new(0.8, 0.42, 0.05), BODY, CFrame.new(0, -0.2, -0.59), false)
+	local sg = Instance.new("SurfaceGui")
+	sg.Face = Enum.NormalId.Front
+	sg.Parent = mouthPlate
+	local mtext = Instance.new("TextLabel")
+	mtext.Size = UDim2.new(1, 0, 1, 0)
+	mtext.BackgroundTransparency = 1
+	mtext.Text = "WW"
+	mtext.TextColor3 = Color3.new(1, 1, 1)
+	mtext.Font = Enum.Font.GothamBlack
+	mtext.TextScaled = true
+	mtext.Parent = sg
+
+	local tongue = mk("Part", Vector3.new(0.28, 0.24, 0.28), PINK, CFrame.new(0, -0.4, -0.6), false)
+	tongue.Transparency = 1
+	local tm = Instance.new("SpecialMesh")
+	tm.MeshType = Enum.MeshType.Sphere
+	tm.Parent = tongue
+
+	local wingLOff = CFrame.new(-0.55, 0.5, 0) * CFrame.Angles(0, 0, math.rad(25))
+	local wingROff = CFrame.new(0.55, 0.5, 0) * CFrame.Angles(0, 0, math.rad(-25))
+	local wingL = mk("WedgePart", Vector3.new(0.34, 0.44, 0.13), WING, wingLOff, false)
+	local wingR = mk("WedgePart", Vector3.new(0.34, 0.44, 0.13), WING, wingROff, false)
+
+	mk("WedgePart", Vector3.new(0.2, 0.25, 0.12), WHITE, CFrame.new(-0.63, -0.36, -0.12) * CFrame.Angles(math.rad(20), 0, math.rad(15)), false)
+	mk("WedgePart", Vector3.new(0.2, 0.25, 0.12), WHITE, CFrame.new(0.63, -0.36, -0.12) * CFrame.Angles(math.rad(20), 0, math.rad(-15)), false)
+
+	local handLOff = CFrame.new(-0.7, -0.62, -0.05) * CFrame.Angles(math.rad(10), 0, math.rad(14))
+	local handROff = CFrame.new(0.7, -0.62, -0.05) * CFrame.Angles(math.rad(10), 0, math.rad(-14))
+	local handL = mk("Part", Vector3.new(0.45, 0.35, 0.55), SKIN, handLOff, false)
+	local handR = mk("Part", Vector3.new(0.45, 0.35, 0.55), SKIN, handROff, false)
+	for i = #parts, 1, -1 do
+		if parts[i].p == handL or parts[i].p == handR then
+			table.remove(parts, i)
+		end
+	end
+
+	model.Parent = nil
+
+	Tool = Instance.new("Tool")
+	Tool.Name = "Buddy"
+	Tool.RequiresHandle = false
+	Tool.Parent = player:WaitForChild("Backpack")
+
+	local squeak = Instance.new("Sound")
+	squeak.SoundId = "rbxassetid://12221967"
+	squeak.Volume = 1
+	squeak.Parent = body
+
+	local function S(pitch)
+		squeak.PlaybackSpeed = pitch
+		squeak:Play()
+	end
+
+	local ANIMS = {
+		{id = "pet", dur = 0.9, start = function() S(0.95 + math.random() * 0.25) end, fn = function(p, t, st)
+			st.eyeY = 0.3; st.tongue = true; st.flapSpeed = 30; st.flapAmp = 0.4
+			st.rootCF = st.rootCF * CFrame.Angles(0, 0, math.sin(t * 35) * 0.12)
+		end},
+		{id = "petHand", dur = 1.7, start = function() S(1 + math.random() * 0.2) end, fn = function(p, t, st)
+			local u
+			if p < 0.2 then u = p / 0.2
+			elseif p > 0.85 then u = (1 - p) / 0.15
+			else u = 1 end
+			local pat = 0
+			if p > 0.2 and p < 0.85 then
+				pat = math.abs(math.sin((p - 0.2) / 0.65 * math.pi * 3)) * 0.13
+			end
+			st.handL = CFrame.new(0.35 * u, 1.12 * u + pat, -0.25 * u) * CFrame.Angles(math.rad(-35) * u, 0, 0)
+			st.eyeY = 0.45
+		end},
+		{id = "spin", dur = 0.7, start = function() S(1.2) end, fn = function(p, t, st)
+			st.rootCF = st.rootCF * CFrame.Angles(0, math.rad(p * 360), 0)
+		end},
+		{id = "flip", dur = 0.7, start = function() S(1.1) end, fn = function(p, t, st)
+			st.rootCF = st.rootCF * CFrame.Angles(math.rad(p * 360), 0, 0)
+		end},
+		{id = "hop", dur = 0.5, start = function() S(1.25) end, fn = function(p, t, st)
+			st.rootCF = st.rootCF * CFrame.new(0, math.sin(p * math.pi) * 0.5, 0)
+		end},
+		{id = "tilt", dur = 0.9, start = function() S(0.85) end, fn = function(p, t, st)
+			st.rootCF = st.rootCF * CFrame.Angles(0, 0, math.sin(p * math.pi * 2) * 0.15)
+		end},
+		{id = "nod", dur = 1.0, start = function() S(1) end, fn = function(p, t, st)
+			st.rootCF = st.rootCF * CFrame.Angles(math.sin(t * 10) * 0.15 * (1 - p * 0.5), 0, 0)
+		end},
+		{id = "zoom", dur = 0.8, start = function() S(1.15) end, fn = function(p, t, st)
+			st.rootCF = st.rootCF * CFrame.new(0, 0, -math.sin(p * math.pi) * 0.9)
+		end},
+		{id = "shake", dur = 0.5, start = function() S(1.3) end, fn = function(p, t, st)
+			local d = 1 - p
+			st.rootCF = st.rootCF * CFrame.new(math.sin(t * 50) * 0.05 * d, math.cos(t * 45) * 0.05 * d, 0)
+		end},
+		{id = "flap", dur = 1.0, start = function() S(1.2) end, fn = function(p, t, st)
+			st.flapSpeed = 30; st.flapAmp = 0.5
+		end},
+		{id = "face", dur = 1.1, start = function()
+			local mouths = {"WW", "ω", "OO", "AA", "VV", "--", "^^"}
+			mtext.Text = mouths[math.random(1, #mouths)]
+			S(1 + math.random() * 0.3)
+		end, fn = function(p, t, st)
+			st.rootCF = st.rootCF * CFrame.Angles(math.sin(p * math.pi) * 0.1, 0, 0)
+		end},
+		{id = "eyes", dur = 0.6, start = function() S(1.1) end, fn = function(p, t, st)
+			st.eyeXZ = 1 + math.sin(p * math.pi * 3) * 0.3
+		end},
+		{id = "light", dur = 0.9, start = function() S(0.9) end, fn = function(p, t, st)
+			st.lightB = 0.8 + math.abs(math.sin(t * 15)) * 1.2
+		end},
+		{id = "blink2", dur = 0.7, start = function() S(1.3) end, fn = function(p, t, st)
+			if (p * 2) % 1 < 0.22 then st.eyeY = 0.08 end
+		end},
+		{id = "wiggle", dur = 1.0, start = function() S(0.85) end, fn = function(p, t, st)
+			st.wingExtra = math.sin(t * 12) * 0.25
+		end},
+		{id = "spinhop", dur = 1.1, start = function() S(1.2) end, fn = function(p, t, st)
+			st.rootCF = st.rootCF * CFrame.Angles(0, math.rad(p * 360), 0) * CFrame.new(0, math.sin(p * math.pi) * 0.4, 0)
+		end},
+	}
+
+	local recent = {}
+	local function pickAnim()
+		local pool = {}
+		for _, a in ipairs(ANIMS) do
+			local skip = false
+			for _, r in ipairs(recent) do
+				if r == a.id then skip = true; break end
+			end
+			if not skip then table.insert(pool, a) end
+		end
+		local chosen = pool[math.random(1, #pool)]
+		table.insert(recent, chosen.id)
+		if #recent > 3 then table.remove(recent, 1) end
+		if chosen.start then chosen.start() end
+		return {fn = chosen.fn, dur = chosen.dur, ends = tick() + chosen.dur}
+	end
+
+	local equipped = false
+	local t = 0
+	local blinkT = 0
+	local nextBlink = 2
+	local lastAction = 0
+	local currentAnim = nil
+
+	Tool.Equipped:Connect(function()
+		equipped = true
+		model.Parent = workspace
+		lastAction = tick() - COOLDOWN + 1
+	end)
+	Tool.Unequipped:Connect(function()
+		equipped = false
+		model.Parent = nil
+	end)
+
+	-- РУЧНАЯ ГЛАЖКА: нельзя, пока идёт любая анимка
+	local function doPet()
+		if currentAnim then return end -- анимка играет — тап игнорируется
+		currentAnim = {fn = ANIMS[1].fn, dur = ANIMS[1].dur, ends = tick() + ANIMS[1].dur}
+		lastAction = tick() -- рандомные анимки ждут полный кулдаун после глажки
+		S(0.95 + math.random() * 0.25)
+	end
+	Tool.Activated:Connect(doPet)
+
+	RunService:BindToRenderStep("BuddyUpdate", Enum.RenderPriority.Camera.Value + 1, function(dt)
+		t = t + dt
+
+		nextBlink = nextBlink - dt
+		if nextBlink <= 0 then
+			blinkT = 0.12
+			nextBlink = 2.5 + math.random() * 3
+		end
+		if blinkT > 0 then blinkT = blinkT - dt end
+
+		if not equipped then return end
+
+		local camera = workspace.CurrentCamera
+		if not camera then return end
+
+		local hold = camera.CFrame * CFrame.new(0, HEIGHT, -DISTANCE)
+		local rootCF = CFrame.lookAt(hold.Position, camera.CFrame.Position)
+
+		local st = {
+			rootCF = rootCF,
+			eyeY = (blinkT > 0) and 0.08 or 0.75,
+			eyeXZ = 1,
+			tongue = false,
+			lightB = 0.8,
+			flapSpeed = 2,
+			flapAmp = 0.03,
+			wingExtra = 0,
+			handL = CFrame.new(),
+			handR = CFrame.new(),
+		}
+
+		-- анимка дожидается конца, новая не перебивает
+		if currentAnim then
+			if tick() >= currentAnim.ends then
+				currentAnim = nil
+			else
+				local p = 1 - (currentAnim.ends - tick()) / currentAnim.dur
+				currentAnim.fn(p, t, st)
+			end
+		end
+		-- рандомная анимка: только после полного кулдауна 3 сек
+		if not currentAnim and tick() - lastAction >= COOLDOWN then
+			lastAction = tick()
+			currentAnim = pickAnim()
+		end
+
+		eyeMeshL.Scale = Vector3.new(st.eyeXZ, st.eyeY, st.eyeXZ)
+		eyeMeshR.Scale = Vector3.new(st.eyeXZ, st.eyeY, st.eyeXZ)
+		tongue.Transparency = st.tongue and 0 or 1
+		pl.Brightness = st.lightB
+
+		local flap = math.sin(t * st.flapSpeed) * st.flapAmp + st.wingExtra
+		for _, e in ipairs(parts) do
+			e.p.CFrame = st.rootCF * e.off
+		end
+		wingL.CFrame = st.rootCF * wingLOff * CFrame.Angles(0, 0, flap)
+		wingR.CFrame = st.rootCF * wingROff * CFrame.Angles(0, 0, -flap)
+		handL.CFrame = st.rootCF * handLOff * st.handL
+		handR.CFrame = st.rootCF * handROff * st.handR
+	end)
+
+	task.spawn(function()
+		while true do
+			task.wait(1)
+			if Tool.Parent == nil then
+				Tool.Parent = player.Character or player.Backpack
+			end
+		end
+	end)
+
+	lbl.Text = "Бадди в инвентаре — достань его"
+	task.delay(3, function() gui:Destroy() end)
+end)
+
+_G.__BuddyCleanup = function()
+	pcall(function() RunService:UnbindToRenderStep("BuddyUpdate") end)
+	if model then pcall(function() model:Destroy() end) end
+	if Tool then pcall(function() Tool:Destroy() end) end
+	if gui then pcall(function() gui:Destroy() end) end
+end
+
+if not ok then
+	lbl.Text = "Ошибка: " .. tostring(err)
+	lbl.TextColor3 = Color3.fromRGB(255, 120, 120)
+	lbl.TextWrapped = true
+	lbl.Size = UDim2.new(0, 340, 0, 90)
+	lbl.Position = UDim2.new(0.5, -170, 0, 60)
+end
